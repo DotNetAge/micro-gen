@@ -44,97 +44,72 @@ class DomainGenerator:
     def generate_aggregates(self):
         """生成聚合根"""
         
-        # 基础聚合根模板
+        # 聚合根模板
         aggregate_template = '''package aggregate
 
 import (
     "time"
-    "github.com/google/uuid"
     "{project}/internal/domain/event"
 )
 
 // {Name} 聚合根
 type {Name} struct {{
     ID        string    `json:"id"`
+    {fields}
     Version   int       `json:"version"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
-    
-    // 业务字段
-    {fields}
-    
-    // 未发布事件
-    events []interface{{}}
+    DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }}
 
 // New{Name} 创建新的{name}
-func New{Name}({params}) *{Name} {{
-    id := uuid.New().String()
-    {name} := &{Name}{{
+func New{Name}(id string, {params}) *{Name} {{
+    return &{Name}{{
         ID:        id,
+        {field_assigns}
         Version:   0,
         CreatedAt: time.Now(),
         UpdatedAt: time.Now(),
-        {field_assigns}
     }}
-    
-    // 发布创建事件
-    {name}.AddEvent(&event.{Name}Created{{
-        ID:        id,
-        {event_fields}
-        Timestamp: time.Now(),
-    }})
-    
-    return {name}
 }}
 
-// AddEvent 添加领域事件
-func (a *{Name}) AddEvent(event interface{{}}) {{
-    a.events = append(a.events, event)
-}}
-
-// GetEvents 获取未发布事件
-func (a *{Name}) GetEvents() []interface{{}} {{
-    return a.events
-}}
-
-// ClearEvents 清除已发布事件
-func (a *{Name}) ClearEvents() {{
-    a.events = []interface{{}}{{}}
-}}
-
-// ApplyEvent 应用领域事件
-func (a *{Name}) ApplyEvent(event interface{{}}) {{
+// ApplyEvent 应用事件
+func (a *{Name}) ApplyEvent(event interface{{}}) error {{
     switch e := event.(type) {{
     case *event.{Name}Created:
-        a.apply{Name}Created(e)
+        return a.apply{Name}Created(e)
     case *event.{Name}Updated:
-        a.apply{Name}Updated(e)
+        return a.apply{Name}Updated(e)
     case *event.{Name}Deleted:
-        a.apply{Name}Deleted(e)
+        return a.apply{Name}Deleted(e)
+    default:
+        return nil
     }}
 }}
 
 // apply{Name}Created 应用创建事件
-func (a *{Name}) apply{Name}Created(e *event.{Name}Created) {{
+func (a *{Name}) apply{Name}Created(e *event.{Name}Created) error {{
     a.ID = e.ID
     {apply_fields}
     a.Version = 0
     a.CreatedAt = e.Timestamp
     a.UpdatedAt = e.Timestamp
+    return nil
 }}
 
 // apply{Name}Updated 应用更新事件
-func (a *{Name}) apply{Name}Updated(e *event.{Name}Updated) {{
+func (a *{Name}) apply{Name}Updated(e *event.{Name}Updated) error {{
     {update_fields}
     a.Version++
     a.UpdatedAt = e.Timestamp
+    return nil
 }}
 
 // apply{Name}Deleted 应用删除事件
-func (a *{Name}) apply{Name}Deleted(e *event.{Name}Deleted) {{
+func (a *{Name}) apply{Name}Deleted(e *event.{Name}Deleted) error {{
     // 标记为已删除，实际删除由仓储处理
     a.UpdatedAt = e.Timestamp
+    return nil
 }}
 '''
         
@@ -188,9 +163,9 @@ import "time"
 
 // {EventName} 事件定义
 type {EventName} struct {{
-    ID        string    `json:\"id\"`
+    ID        string    `json:"id"`
     {fields}
-    Timestamp time.Time `json:\"timestamp\"`
+    Timestamp time.Time `json:"timestamp"`
 }}
 
 // EventName 返回事件名称
@@ -206,8 +181,7 @@ func (e *{EventName}) AggregateID() string {{
 // EventTime 返回事件时间
 func (e *{EventName}) EventTime() time.Time {{
     return e.Timestamp
-}}
-'''
+}}'''
         
         # 为每个聚合生成事件
         for aggregate in self.config['aggregates']:
@@ -262,8 +236,7 @@ type {Name}Repository interface {{
     LoadEvents(ctx context.Context, aggregateID string) ([]interface{{}}, error)
     SaveEvents(ctx context.Context, aggregateID string, events []interface{{}}, version int) error
     GetVersion(ctx context.Context, aggregateID string) (int, error)
-}}
-'''
+}}'''
         
         # 为每个聚合生成仓储接口
         for aggregate in self.config['aggregates']:
@@ -286,6 +259,7 @@ type {Name}Repository interface {{
 
 import (
     "context"
+    "time"
     "{project}/internal/domain/event"
 )
 
@@ -303,8 +277,7 @@ type {Name}ProjectionModel struct {{
     {fields}
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
-}}
-'''
+}}'''
         
         # 为每个聚合生成投影接口
         for aggregate in self.config['aggregates']:

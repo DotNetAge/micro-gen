@@ -46,30 +46,30 @@ import (
 )
 
 // Create{Name}Command 创建{name}命令
-type Create{Name}Command struct {
+type Create{Name}Command struct {{
     {fields}
-}
+}}
 
 // Create{Name}Handler 创建{name}处理器
-type Create{Name}Handler struct {
+type Create{Name}Handler struct {{
     repository repository.{Name}Repository
     eventStore eventstore.EventStore
-}
+}}
 
 // NewCreate{Name}Handler 创建处理器实例
-func NewCreate{Name}Handler(repo repository.{Name}Repository, store eventstore.EventStore) *Create{Name}Handler {
-    return &Create{Name}Handler{
+func NewCreate{Name}Handler(repo repository.{Name}Repository, store eventstore.EventStore) *Create{Name}Handler {{
+    return &Create{Name}Handler{{
         repository: repo,
         eventStore: store,
-    }
-}
+    }}
+}}
 
 // Handle 处理创建{name}命令
-func (h *Create{Name}Handler) Handle(ctx context.Context, cmd Create{Name}Command) error {
+func (h *Create{Name}Handler) Handle(ctx context.Context, cmd Create{Name}Command) error {{
     // 业务验证
-    if err := h.validate(cmd); err != nil {
+    if err := h.validate(cmd); err != nil {{
         return fmt.Errorf("validation failed: %w", err)
-    }
+    }}
     
     // 创建聚合根
     {name} := aggregate.New{Name}(
@@ -77,29 +77,29 @@ func (h *Create{Name}Handler) Handle(ctx context.Context, cmd Create{Name}Comman
     )
     
     // 保存聚合状态
-    if err := h.repository.Save(ctx, {name}); err != nil {
+    if err := h.repository.Save(ctx, {name}); err != nil {{
         return fmt.Errorf("failed to save {name}: %w", err)
-    }
+    }}
     
     // 发布领域事件
     events := {name}.GetEvents()
-    for _, event := range events {
-        if err := h.eventStore.Publish(ctx, event); err != nil {
+    for _, event := range events {{
+        if err := h.eventStore.Publish(ctx, event); err != nil {{
             return fmt.Errorf("failed to publish event: %w", err)
-        }
-    }
+        }}
+    }}
     
     // 清除已发布事件
     {name}.ClearEvents()
     
     return nil
-}
+}}
 
 // validate 验证命令参数
-func (h *Create{Name}Handler) validate(cmd Create{Name}Command) error {
+func (h *Create{Name}Handler) validate(cmd Create{Name}Command) error {{
     // TODO: 实现业务验证逻辑
     return nil
-}
+}}
 '''
         
         # 更新用例模板
@@ -116,76 +116,76 @@ import (
 )
 
 // Update{Name}Command 更新{name}命令
-type Update{Name}Command struct {
+type Update{Name}Command struct {{
     ID string
     {fields}
-}
+}}
 
 // Update{Name}Handler 更新{name}处理器
-type Update{Name}Handler struct {
+type Update{Name}Handler struct {{
     repository repository.{Name}Repository
     eventStore eventstore.EventStore
-}
+}}
 
 // NewUpdate{Name}Handler 创建处理器实例
-func NewUpdate{Name}Handler(repo repository.{Name}Repository, store eventstore.EventStore) *Update{Name}Handler {
-    return &Update{Name}Handler{
+func NewUpdate{Name}Handler(repo repository.{Name}Repository, store eventstore.EventStore) *Update{Name}Handler {{
+    return &Update{Name}Handler{{
         repository: repo,
         eventStore: store,
-    }
-}
+    }}
+}}
 
 // Handle 处理更新{name}命令
-func (h *Update{Name}Handler) Handle(ctx context.Context, cmd Update{Name}Command) error {
+func (h *Update{Name}Handler) Handle(ctx context.Context, cmd Update{Name}Command) error {{
     // 查找聚合根
     {name}, err := h.repository.FindByID(ctx, cmd.ID)
-    if err != nil {
+    if err != nil {{
         return fmt.Errorf("failed to find {name}: %w", err)
-    }
+    }}
     
-    if {name} == nil {
+    if {name} == nil {{
         return fmt.Errorf("{name} not found")
-    }
+    }}
     
     // 业务验证
-    if err := h.validate(cmd); err != nil {
+    if err := h.validate(cmd); err != nil {{
         return fmt.Errorf("validation failed: %w", err)
-    }
+    }}
     
     // 更新聚合根
     {update_logic}
     
     // 发布更新事件
-    {name}.AddEvent(&event.{Name}Updated{
+    {name}.AddEvent(&event.{Name}Updated{{
         ID: cmd.ID,
         {event_fields}
         Timestamp: time.Now(),
-    })
+    }})
     
     // 保存聚合状态
-    if err := h.repository.Save(ctx, {name}); err != nil {
+    if err := h.repository.Save(ctx, {name}); err != nil {{
         return fmt.Errorf("failed to save {name}: %w", err)
-    }
+    }}
     
     // 发布领域事件
     events := {name}.GetEvents()
-    for _, event := range events {
-        if err := h.eventStore.Publish(ctx, event); err != nil {
+    for _, event := range events {{
+        if err := h.eventStore.Publish(ctx, event); err != nil {{
             return fmt.Errorf("failed to publish event: %w", err)
-        }
-    }
+        }}
+    }}
     
     // 清除已发布事件
     {name}.ClearEvents()
     
     return nil
-}
+}}
 
 // validate 验证命令参数
-func (h *Update{Name}Handler) validate(cmd Update{Name}Command) error {
+func (h *Update{Name}Handler) validate(cmd Update{Name}Command) error {{
     // TODO: 实现业务验证逻辑
     return nil
-}
+}}
 '''
         
         # 为每个聚合生成命令用例
@@ -249,43 +249,43 @@ import (
 )
 
 // Get{Name}Query 获取{name}查询
-type Get{Name}Query struct {
+type Get{Name}Query struct {{
     ID string
-}
+}}
 
 // Get{Name}Handler 获取{name}处理器
-type Get{Name}Handler struct {
+type Get{Name}Handler struct {{
     projection projection.{Name}Projection
-}
+}}
 
 // NewGet{Name}Handler 创建处理器实例
-func NewGet{Name}Handler(proj projection.{Name}Projection) *Get{Name}Handler {
-    return &Get{Name}Handler{
+func NewGet{Name}Handler(proj projection.{Name}Projection) *Get{Name}Handler {{
+    return &Get{Name}Handler{{
         projection: proj,
-    }
-}
+    }}
+}}
 
 // Handle 处理获取{name}查询
-func (h *Get{Name}Handler) Handle(ctx context.Context, query Get{Name}Query) (*{Name}Response, error) {
+func (h *Get{Name}Handler) Handle(ctx context.Context, query Get{Name}Query) (*{Name}Response, error) {{
     // 从投影查询数据
     result, err := h.projection.Get(ctx, query.ID)
-    if err != nil {
+    if err != nil {{
         return nil, fmt.Errorf("failed to get {name}: %w", err)
-    }
+    }}
     
-    if result == nil {
+    if result == nil {{
         return nil, fmt.Errorf("{name} not found")
-    }
+    }}
     
-    return &{Name}Response{
+    return &{Name}Response{{
         Data: result,
-    }, nil
-}
+    }}, nil
+}}
 
 // {Name}Response 查询响应
-type {Name}Response struct {
+type {Name}Response struct {{
     Data *{Name}ProjectionModel `json:"data"`
-}
+}}
 '''
         
         # 列表查询用例模板
@@ -299,51 +299,51 @@ import (
 )
 
 // List{Name}Query 列表{name}查询
-type List{Name}Query struct {
+type List{Name}Query struct {{
     Limit  int
     Offset int
-}
+}}
 
 // List{Name}Handler 列表{name}处理器
-type List{Name}Handler struct {
+type List{Name}Handler struct {{
     projection projection.{Name}Projection
-}
+}}
 
 // NewList{Name}Handler 创建处理器实例
-func NewList{Name}Handler(proj projection.{Name}Projection) *List{Name}Handler {
-    return &List{Name}Handler{
+func NewList{Name}Handler(proj projection.{Name}Projection) *List{Name}Handler {{
+    return &List{Name}Handler{{
         projection: proj,
-    }
-}
+    }}
+}}
 
 // Handle 处理列表{name}查询
-func (h *List{Name}Handler) Handle(ctx context.Context, query List{Name}Query) (*List{Name}Response, error) {
+func (h *List{Name}Handler) Handle(ctx context.Context, query List{Name}Query) (*List{Name}Response, error) {{
     // 从投影查询数据
     results, err := h.projection.GetAll(ctx)
-    if err != nil {
+    if err != nil {{
         return nil, fmt.Errorf("failed to list {name}: %w", err)
-    }
+    }}
     
     // 应用分页
     start := query.Offset
-    if start >= len(results) {
-        return &List{Name}Response{Data: []*{Name}ProjectionModel{}}, nil
-    }
+    if start >= len(results) {{
+        return &List{Name}Response{{Data: []*{Name}ProjectionModel{{}}}}, nil
+    }}
     
     end := start + query.Limit
-    if end > len(results) {
+    if end > len(results) {{
         end = len(results)
-    }
+    }}
     
-    return &List{Name}Response{
+    return &List{Name}Response{{
         Data: results[start:end],
-    }, nil
-}
+    }}, nil
+}}
 
 // List{Name}Response 列表查询响应
-type List{Name}Response struct {
+type List{Name}Response struct {{
     Data []*{Name}ProjectionModel `json:"data"`
-}
+}}
 '''
         
         # 为每个聚合生成查询用例
@@ -385,26 +385,26 @@ import (
 )
 
 // {EventName}Handler {event_name}事件处理器
-type {EventName}Handler struct {
+type {EventName}Handler struct {{
     projection projection.{Name}Projection
-}
+}}
 
 // New{EventName}Handler 创建处理器实例
-func New{EventName}Handler(proj projection.{Name}Projection) *{EventName}Handler {
-    return &{EventName}Handler{
+func New{EventName}Handler(proj projection.{Name}Projection) *{EventName}Handler {{
+    return &{EventName}Handler{{
         projection: proj,
-    }
-}
+    }}
+}}
 
 // Handle 处理{event_name}事件
-func (h *{EventName}Handler) Handle(ctx context.Context, event *event.{EventName}) error {
+func (h *{EventName}Handler) Handle(ctx context.Context, event *event.{EventName}) error {{
     // 更新投影
-    if err := h.projection.Project(ctx, event); err != nil {
+    if err := h.projection.Project(ctx, event); err != nil {{
         return fmt.Errorf("failed to project event: %w", err)
-    }
+    }}
     
     return nil
-}
+}}
 '''
         
         # 为每个聚合生成事件处理器

@@ -49,118 +49,117 @@ import (
 )
 
 // NatsEventStore NATS事件存储
-type NatsEventStore struct {
+type NatsEventStore struct {{
     conn   *nats.Conn
     js     nats.JetStreamContext
     stream string
-}
+}}
 
 // NewNatsEventStore 创建NATS事件存储
-func NewNatsEventStore(url string, stream string) (*NatsEventStore, error) {
+func NewNatsEventStore(url string, stream string) (*NatsEventStore, error) {{
     // 连接到NATS
     conn, err := nats.Connect(url)
-    if err != nil {
+    if err != nil {{
         return nil, fmt.Errorf("failed to connect to NATS: %w", err)
-    }
+    }}
     
     // 获取JetStream上下文
     js, err := conn.JetStream()
-    if err != nil {
+    if err != nil {{
         return nil, fmt.Errorf("failed to get JetStream: %w", err)
-    }
+    }}
     
     // 创建流
-    streamConfig := &nats.StreamConfig{
+    streamConfig := &nats.StreamConfig{{
         Name:      stream,
-        Subjects:  []string{"events.*"},
+        Subjects:  []string{{"events.*"}},
         Storage:   nats.FileStorage,
         Retention: nats.LimitsPolicy,
         MaxAge:    24 * 365 * time.Hour, // 1年
-    }
+    }}
     
     _, err = js.AddStream(streamConfig)
-    if err != nil && err != nats.ErrStreamNameAlreadyInUse {
+    if err != nil && err != nats.ErrStreamNameAlreadyInUse {{
         return nil, fmt.Errorf("failed to create stream: %w", err)
-    }
+    }}
     
-    return &NatsEventStore{
+    return &NatsEventStore{{
         conn:   conn,
         js:     js,
         stream: stream,
-    }, nil
-}
+    }}, nil
+}}
 
 // Publish 发布事件
-func (s *NatsEventStore) Publish(ctx context.Context, event event.Event) error {
+func (s *NatsEventStore) Publish(ctx context.Context, event event.Event) error {{
     data, err := json.Marshal(event)
-    if err != nil {
+    if err != nil {{
         return fmt.Errorf("failed to marshal event: %w", err)
-    }
+    }}
     
     subject := fmt.Sprintf("events.%s", event.GetType())
     
     _, err = s.js.Publish(subject, data)
-    if err != nil {
+    if err != nil {{
         return fmt.Errorf("failed to publish event: %w", err)
-    }
+    }}
     
     log.Printf("Published event: %s", event.GetType())
     return nil
-}
+}}
 
 // Subscribe 订阅事件
-func (s *NatsEventStore) Subscribe(ctx context.Context, eventType string, handler func(event.Event) error) error {
+func (s *NatsEventStore) Subscribe(ctx context.Context, eventType string, handler func(event.Event) error) error {{
     subject := fmt.Sprintf("events.%s", eventType)
     
-    _, err := s.js.Subscribe(subject, func(msg *nats.Msg) {
-        var eventData map[string]interface{}
-        if err := json.Unmarshal(msg.Data, &eventData); err != nil {
+    _, err := s.js.Subscribe(subject, func(msg *nats.Msg) {{
+        var eventData map[string]interface{{}}
+        if err := json.Unmarshal(msg.Data, &eventData); err != nil {{
             log.Printf("Failed to unmarshal event: %v", err)
             return
-        }
+        }}
         
         // 创建具体的事件实例
         var event event.Event
-        switch eventType {
+        switch eventType {{
         case "{name}.created":
-            event = &event.{Name}Created{}
+            event = &event.{Name}Created{{}}
         case "{name}.updated":
-            event = &event.{Name}Updated{}
+            event = &event.{Name}Updated{{}}
         case "{name}.deleted":
-            event = &event.{Name}Deleted{}
+            event = &event.{Name}Deleted{{}}
         default:
             log.Printf("Unknown event type: %s", eventType)
             return
-        }
+        }}
         
-        if err := json.Unmarshal(msg.Data, event); err != nil {
+        if err := json.Unmarshal(msg.Data, event); err != nil {{
             log.Printf("Failed to unmarshal event: %v", err)
             return
-        }
+        }}
         
-        if err := handler(event); err != nil {
+        if err := handler(event); err != nil {{
             log.Printf("Failed to handle event: %v", err)
             return
-        }
+        }}
         
         msg.Ack()
-    }, nats.Durable(eventType))
+    }}, nats.Durable(eventType))
     
-    if err != nil {
+    if err != nil {{
         return fmt.Errorf("failed to subscribe to events: %w", err)
-    }
+    }}
     
     return nil
-}
+}}
 
 // Close 关闭连接
-func (s *NatsEventStore) Close() error {
-    if s.conn != nil {
+func (s *NatsEventStore) Close() error {{
+    if s.conn != nil {{
         s.conn.Close()
-    }
+    }}
     return nil
-}
-'''
+}}'''
         
         # 快照存储模板
         snapshot_template = '''package eventstore
@@ -176,101 +175,101 @@ import (
 )
 
 // SnapshotStore 快照存储
-type SnapshotStore struct {
+type SnapshotStore struct {{
     conn   *nats.Conn
     js     nats.JetStreamContext
     stream string
-}
+}}
 
 // NewSnapshotStore 创建快照存储
-func NewSnapshotStore(url string, stream string) (*SnapshotStore, error) {
+func NewSnapshotStore(url string, stream string) (*SnapshotStore, error) {{
     conn, err := nats.Connect(url)
-    if err != nil {
+    if err != nil {{
         return nil, fmt.Errorf("failed to connect to NATS: %w", err)
-    }
+    }}
     
     js, err := conn.JetStream()
-    if err != nil {
+    if err != nil {{
         return nil, fmt.Errorf("failed to get JetStream: %w", err)
-    }
+    }}
     
-    streamConfig := &nats.StreamConfig{
+    streamConfig := &nats.StreamConfig{{
         Name:      stream,
-        Subjects:  []string{"snapshots.*"},
+        Subjects:  []string{{"snapshots.*"}},
         Storage:   nats.FileStorage,
         Retention: nats.LimitsPolicy,
         MaxAge:    7 * 24 * time.Hour, // 7天
-    }
+    }}
     
     _, err = js.AddStream(streamConfig)
-    if err != nil && err != nats.ErrStreamNameAlreadyInUse {
+    if err != nil && err != nats.ErrStreamNameAlreadyInUse {{
         return nil, fmt.Errorf("failed to create stream: %w", err)
-    }
+    }}
     
-    return &SnapshotStore{
+    return &SnapshotStore{{
         conn:   conn,
         js:     js,
         stream: stream,
-    }, nil
-}
+    }}, nil
+}}
 
 // SaveSnapshot 保存快照
-func (s *SnapshotStore) SaveSnapshot(ctx context.Context, aggregateID string, aggregate aggregate.Aggregate) error {
-    snapshot := Snapshot{
+func (s *SnapshotStore) SaveSnapshot(ctx context.Context, aggregateID string, aggregate *aggregate.{Name}, version int) error {{
+    snapshot := Snapshot{{
         AggregateID: aggregateID,
-        Type:        aggregate.GetType(),
+        Version:     version,
         Data:        aggregate,
-        Version:     aggregate.GetVersion(),
         Timestamp:   time.Now(),
-    }
+    }}
     
     data, err := json.Marshal(snapshot)
-    if err != nil {
+    if err != nil {{
         return fmt.Errorf("failed to marshal snapshot: %w", err)
-    }
+    }}
     
-    subject := fmt.Sprintf("snapshots.%s", aggregate.GetType())
+    subject := fmt.Sprintf("snapshots.%s", aggregateID)
     
     _, err = s.js.Publish(subject, data)
-    if err != nil {
+    if err != nil {{
         return fmt.Errorf("failed to publish snapshot: %w", err)
-    }
+    }}
     
     return nil
-}
+}}
 
 // LoadSnapshot 加载快照
-func (s *SnapshotStore) LoadSnapshot(ctx context.Context, aggregateID string, aggregateType string) (aggregate.Aggregate, error) {
-    subject := fmt.Sprintf("snapshots.%s", aggregateType)
+func (s *SnapshotStore) LoadSnapshot(ctx context.Context, aggregateID string) (*aggregate.{Name}, int, error) {{
+    subject := fmt.Sprintf("snapshots.%s", aggregateID)
     
-    sub, err := s.js.SubscribeSync(subject, nats.DeliverLastPerSubject())
-    if err != nil {
-        return nil, fmt.Errorf("failed to subscribe to snapshots: %w", err)
-    }
+    sub, err := s.js.SubscribeSync(subject)
+    if err != nil {{
+        return nil, 0, fmt.Errorf("failed to subscribe to snapshots: %w", err)
+    }}
     defer sub.Unsubscribe()
     
-    msg, err := sub.NextMsgWithContext(ctx)
-    if err != nil {
-        return nil, fmt.Errorf("failed to get snapshot: %w", err)
-    }
+    msg, err := sub.NextMsg(1 * time.Second)
+    if err != nil {{
+        if err == nats.ErrTimeout {{
+            return nil, 0, nil // 没有快照
+        }}
+        return nil, 0, fmt.Errorf("failed to get snapshot: %w", err)
+    }}
     
     var snapshot Snapshot
-    if err := json.Unmarshal(msg.Data, &snapshot); err != nil {
-        return nil, fmt.Errorf("failed to unmarshal snapshot: %w", err)
-    }
+    if err := json.Unmarshal(msg.Data, &snapshot); err != nil {{
+        return nil, 0, fmt.Errorf("failed to unmarshal snapshot: %w", err)
+    }}
     
-    return snapshot.Data, nil
-}
+    return snapshot.Data, snapshot.Version, nil
+}}
 
-// Snapshot 快照结构
-type Snapshot struct {
-    AggregateID string                 `json:"aggregate_id"`
-    Type        string                 `json:"type"`
-    Data        aggregate.Aggregate    `json:"data"`
-    Version     int                    `json:"version"`
-    Timestamp   time.Time              `json:"timestamp"`
-}
-'''
+// Snapshot 快照数据结构
+type Snapshot struct {{
+    AggregateID string      `json:"aggregate_id"`
+    Version     int         `json:"version"`
+    Data        interface{{}} `json:"data"`
+    Timestamp   time.Time   `json:"timestamp"`
+}}'''
         
         # 为每个聚合生成事件存储
         for aggregate in self.config['aggregates']:
@@ -288,6 +287,8 @@ type Snapshot struct {
             
             # 生成快照存储
             snapshot_content = snapshot_template.format(
+                Name=name.capitalize(),
+                name=name.lower(),
                 project=self.project_name
             )
             
@@ -313,49 +314,49 @@ import (
 )
 
 // Memory{Name}Projection 内存{name}投影
-type Memory{Name}Projection struct {
+type Memory{Name}Projection struct {{
     mu    sync.RWMutex
     data  map[string]*projection.{Name}ProjectionModel
     index map[string]int
     items []*projection.{Name}ProjectionModel
-}
+}}
 
 // NewMemory{Name}Projection 创建内存投影实例
-func NewMemory{Name}Projection() *Memory{Name}Projection {
-    return &Memory{Name}Projection{
+func NewMemory{Name}Projection() *Memory{Name}Projection {{
+    return &Memory{Name}Projection{{
         data:  make(map[string]*projection.{Name}ProjectionModel),
         index: make(map[string]int),
         items: make([]*projection.{Name}ProjectionModel, 0),
-    }
-}
+    }}
+}}
 
 // Get 获取{name}
-func (p *Memory{Name}Projection) Get(ctx context.Context, id string) (*projection.{Name}ProjectionModel, error) {
+func (p *Memory{Name}Projection) Get(ctx context.Context, id string) (*projection.{Name}ProjectionModel, error) {{
     p.mu.RLock()
     defer p.mu.RUnlock()
     
     item, exists := p.data[id]
-    if !exists {
+    if !exists {{
         return nil, fmt.Errorf("{name} not found")
-    }
+    }}
     
     return item, nil
-}
+}}
 
 // GetAll 获取所有{name}
-func (p *Memory{Name}Projection) GetAll(ctx context.Context) ([]*projection.{Name}ProjectionModel, error) {
+func (p *Memory{Name}Projection) GetAll(ctx context.Context) ([]*projection.{Name}ProjectionModel, error) {{
     p.mu.RLock()
     defer p.mu.RUnlock()
     
     return p.items, nil
-}
+}}
 
 // Project 处理事件投影
-func (p *Memory{Name}Projection) Project(ctx context.Context, event event.Event) error {
+func (p *Memory{Name}Projection) Project(ctx context.Context, event event.Event) error {{
     p.mu.Lock()
     defer p.mu.Unlock()
     
-    switch e := event.(type) {
+    switch e := event.(type) {{
     case *event.{Name}Created:
         return p.handle{Name}Created(e)
     case *event.{Name}Updated:
@@ -364,53 +365,52 @@ func (p *Memory{Name}Projection) Project(ctx context.Context, event event.Event)
         return p.handle{Name}Deleted(e)
     default:
         return fmt.Errorf("unknown event type: %T", event)
-    }
-}
+    }}
+}}
 
-func (p *Memory{Name}Projection) handle{Name}Created(e *event.{Name}Created) error {
-    model := &projection.{Name}ProjectionModel{
+func (p *Memory{Name}Projection) handle{Name}Created(e *event.{Name}Created) error {{
+    model := &projection.{Name}ProjectionModel{{
         ID:        e.ID,
         {field_assigns}
         CreatedAt: e.Timestamp,
         UpdatedAt: e.Timestamp,
-    }
+    }}
     
     p.data[e.ID] = model
     p.index[e.ID] = len(p.items)
     p.items = append(p.items, model)
     
     return nil
-}
+}}
 
-func (p *Memory{Name}Projection) handle{Name}Updated(e *event.{Name}Updated) error {
+func (p *Memory{Name}Projection) handle{Name}Updated(e *event.{Name}Updated) error {{
     model, exists := p.data[e.ID]
-    if !exists {
+    if !exists {{
         return fmt.Errorf("{name} not found")
-    }
+    }}
     
     {field_updates}
     model.UpdatedAt = e.Timestamp
     
     return nil
-}
+}}
 
-func (p *Memory{Name}Projection) handle{Name}Deleted(e *event.{Name}Deleted) error {
+func (p *Memory{Name}Projection) handle{Name}Deleted(e *event.{Name}Deleted) error {{
     model, exists := p.data[e.ID]
-    if !exists {
+    if !exists {{
         return nil
-    }
+    }}
     
     delete(p.data, e.ID)
     
     index, exists := p.index[e.ID]
-    if exists {
+    if exists {{
         p.items = append(p.items[:index], p.items[index+1:]...)
         delete(p.index, e.ID)
-    }
+    }}
     
     return nil
-}
-'''
+}}'''
         
         # 为每个聚合生成投影存储
         for aggregate in self.config['aggregates']:
@@ -455,7 +455,7 @@ import (
 )
 
 // Container 依赖注入容器
-type Container struct {
+type Container struct {{
     // 基础设施
     EventStore   *eventstore.NatsEventStore
     SnapshotStore *eventstore.SnapshotStore
@@ -475,20 +475,20 @@ type Container struct {
     {http_handlers}
     {grpc_services}
     {message_handlers}
-}
+}}
 
 // NewContainer 创建容器实例
-func NewContainer(config *Config) (*Container, error) {
+func NewContainer(config *Config) (*Container, error) {{
     // 创建基础设施
     eventStore, err := eventstore.NewNatsEventStore(config.NATS.URL, config.NATS.Stream)
-    if err != nil {
+    if err != nil {{
         return nil, err
-    }
+    }}
     
     snapshotStore, err := eventstore.NewSnapshotStore(config.NATS.URL, config.NATS.SnapshotStream)
-    if err != nil {
+    if err != nil {{
         return nil, err
-    }
+    }}
     
     // 创建投影
     {projection_instances}
@@ -498,204 +498,184 @@ func NewContainer(config *Config) (*Container, error) {
     
     // 创建用例
     {command_instances}
+    
+    // 创建查询
     {query_instances}
+    
+    // 创建事件处理器
     {handler_instances}
     
-    // 创建适配器
-    {http_handler_instances}
-    {grpc_service_instances}
-    {message_handler_instances}
-    
-    return &Container{
+    return &Container{{
         EventStore:    eventStore,
         SnapshotStore: snapshotStore,
-        {projection_assigns}
-        {repository_assigns}
-        {command_assigns}
-        {query_assigns}
-        {handler_assigns}
-        {http_handler_assigns}
-        {grpc_service_assigns}
-        {message_handler_assigns}
-    }, nil
-}
-
-// Close 关闭容器资源
-func (c *Container) Close() error {
-    if c.EventStore != nil {
-        return c.EventStore.Close()
-    }
-    return nil
-}
-'''
+        {projection_fields}
+        {repository_fields}
+        {command_fields}
+        {query_fields}
+        {handler_fields}
+        {http_fields}
+        {grpc_fields}
+        {message_fields}
+    }}, nil
+}}'''
         
         # 配置模板
-        config_template = '''package container
+        config_template = '''package config
 
-// Config 配置
-type Config struct {
-    NATS NATSConfig
-}
+import (
+    "os"
+    "strconv"
+    "time"
+)
+
+// Config 应用配置
+type Config struct {{
+    Server ServerConfig
+    NATS   NATSConfig
+    Log    LogConfig
+}}
+
+// ServerConfig 服务器配置
+type ServerConfig struct {{
+    Host         string
+    Port         int
+    ReadTimeout  time.Duration
+    WriteTimeout time.Duration
+    IdleTimeout  time.Duration
+}}
 
 // NATSConfig NATS配置
-type NATSConfig struct {
-    URL           string
-    Stream        string
+type NATSConfig struct {{
+    URL            string
+    Stream         string
     SnapshotStream string
-}
-'''
-        
-        # 生成容器和配置
-        container_path = self.base_path / 'internal' / 'infrastructure' / 'container' / 'container.go'
-        self.write_file(container_path, container_content)
-        
-        config_path = self.base_path / 'internal' / 'infrastructure' / 'container' / 'config.go'
-        self.write_file(config_path, config_template)
-    
+}}
+
+// LogConfig 日志配置
+type LogConfig struct {{
+    Level  string
+    Format string
+}}
+
+// LoadConfig 加载配置
+func LoadConfig() *Config {{
+    return &Config{{
+        Server: ServerConfig{{
+            Host:         getEnv("SERVER_HOST", "0.0.0.0"),
+            Port:         getEnvInt("SERVER_PORT", 8080),
+            ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
+            WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
+            IdleTimeout:  getEnvDuration("SERVER_IDLE_TIMEOUT", 120*time.Second),
+        }},
+        NATS: NATSConfig{{
+            URL:            getEnv("NATS_URL", "nats://localhost:4222"),
+            Stream:         getEnv("NATS_STREAM", "{project}"),
+            SnapshotStream: getEnv("NATS_SNAPSHOT_STREAM", "{project}-snapshots"),
+        }},
+        Log: LogConfig{{
+            Level:  getEnv("LOG_LEVEL", "info"),
+            Format: getEnv("LOG_FORMAT", "json"),
+        }},
+    }}
+}}
+
+func getEnv(key, defaultValue string) string {{
+    if value := os.Getenv(key); value != "" {{
+        return value
+    }}
+    return defaultValue
+}}
+
+func getEnvInt(key string, defaultValue int) int {{
+    if value := os.Getenv(key); value != "" {{
+        if intValue, err := strconv.Atoi(value); err == nil {{
+            return intValue
+        }}
+    }}
+    return defaultValue
+}}
+
+func getEnvDuration(key string, defaultValue time.Duration) time.Duration {{
+    if value := os.Getenv(key); value != "" {{
+        if duration, err := time.ParseDuration(value); err == nil {{
+            return duration
+        }}
+    }}
+    return defaultValue
+}}'''
+
     def generate_bootstrap(self):
         """生成引导程序"""
         
         # 引导程序模板
-        bootstrap_template = '''package bootstrap
+        bootstrap_template = '''package main
 
 import (
     "context"
     "log"
-    "net"
     "net/http"
     "os"
     "os/signal"
     "syscall"
     "time"
 
-    "google.golang.org/grpc"
-    "{project}/internal/adapter/grpc"
+    "{project}/internal/adapter/container"
     "{project}/internal/adapter/http"
-    "{project}/internal/adapter/message"
-    "{project}/internal/infrastructure/container"
 )
 
-// App 应用
-type App struct {
-    container *container.Container
-    httpServer *http.Server
-    grpcServer *grpc.Server
-    config *container.Config
-}
-
-// NewApp 创建应用实例
-func NewApp(config *container.Config) (*App, error) {
-    container, err := container.NewContainer(config)
-    if err != nil {
-        return nil, err
-    }
+func main() {{
+    // 加载配置
+    config := container.LoadConfig()
     
-    return &App{
-        container: container,
-        config:    config,
-    }, nil
-}
-
-// Start 启动应用
-func (a *App) Start() error {
-    ctx := context.Background()
+    // 创建容器
+    c, err := container.NewContainer(config)
+    if err != nil {{
+        log.Fatal("Failed to create container:", err)
+    }}
     
-    // 启动事件订阅
-    if err := a.startEventSubscribers(ctx); err != nil {
-        return err
-    }
+    // 创建HTTP服务器
+    srv := &http.Server{{
+        Addr:         config.Server.Host + ":" + string(rune(config.Server.Port)),
+        Handler:      http.NewRouter(c),
+        ReadTimeout:  config.Server.ReadTimeout,
+        WriteTimeout: config.Server.WriteTimeout,
+        IdleTimeout:  config.Server.IdleTimeout,
+    }}
     
-    // 启动HTTP服务器
-    go func() {
-        if err := a.startHTTPServer(); err != nil {
-            log.Printf("HTTP server error: %v", err)
-        }
-    }()
-    
-    // 启动gRPC服务器
-    go func() {
-        if err := a.startGRPCServer(); err != nil {
-            log.Printf("gRPC server error: %v", err)
-        }
-    }()
+    // 启动服务器
+    go func() {{
+        log.Printf("Starting server on %s", srv.Addr)
+        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {{
+            log.Fatal("Server failed to start:", err)
+        }}
+    }}()
     
     // 等待中断信号
-    a.waitForShutdown()
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
     
-    return nil
-}
-
-// startEventSubscribers 启动事件订阅者
-func (a *App) startEventSubscribers(ctx context.Context) error {
-    // TODO: 启动事件订阅者
-    return nil
-}
-
-// startHTTPServer 启动HTTP服务器
-func (a *App) startHTTPServer() error {
-    mux := http.NewServeMux()
+    log.Println("Shutting down server...")
     
-    // 注册HTTP处理器
-    {http_registrations}
+    // 优雅关闭
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
     
-    a.httpServer = &http.Server{
-        Addr:    ":8080",
-        Handler: mux,
-    }
+    if err := srv.Shutdown(ctx); err != nil {{
+        log.Fatal("Server forced to shutdown:", err)
+    }}
     
-    log.Println("HTTP server starting on :8080")
-    return a.httpServer.ListenAndServe()
-}
-
-// startGRPCServer 启动gRPC服务器
-func (a *App) startGRPCServer() error {
-    lis, err := net.Listen("tcp", ":50051")
-    if err != nil {
-        return err
-    }
-    
-    a.grpcServer = grpc.NewServer()
-    
-    // 注册gRPC服务
-    {grpc_registrations}
-    
-    log.Println("gRPC server starting on :50051")
-    return a.grpcServer.Serve(lis)
-}
-
-// waitForShutdown 等待关闭信号
-func (a *App) waitForShutdown() {
-    sigChan := make(chan os.Signal, 1)
-    signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-    <-sigChan
-    
-    log.Println("Shutting down...")
-    
-    // 优雅关闭HTTP服务器
-    if a.httpServer != nil {
-        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-        defer cancel()
-        a.httpServer.Shutdown(ctx)
-    }
-    
-    // 优雅关闭gRPC服务器
-    if a.grpcServer != nil {
-        a.grpcServer.GracefulStop()
-    }
-    
-    // 关闭容器
-    if a.container != nil {
-        a.container.Close()
-    }
-}
-
-// Stop 停止应用
-func (a *App) Stop() error {
-    return nil
-}
-'''
+    log.Println("Server exited")
+}}'''
         
-        # 主程序模板
+        # 生成引导程序
+        bootstrap_content = bootstrap_template.format(
+            project=self.project_name
+        )
+        
+        bootstrap_path = self.base_path / 'cmd' / 'server' / 'main.go'
+        self.write_file(bootstrap_path, bootstrap_content)
+        
         main_template = '''package main
 
 import (

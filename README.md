@@ -18,13 +18,13 @@
 ### 1. 生成图片管理系统示例
 
 ```bash
-python3 python-generator.py --config examples/clean-arch-go-config.yaml --project image-system --quick-start
+python3 micro-gen --config examples/clean-arch-go-config.yaml --output clean-arch-go
 ```
 
 ### 2. 15秒启动完整系统
 
 ```bash
-cd image-system
+cd clean-arch-go
 ./scripts/start.sh
 
 # 访问服务

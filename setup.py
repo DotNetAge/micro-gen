@@ -15,7 +15,9 @@ with open("VERSION", "r", encoding="utf-8") as fh:
 
 # 读取requirements
 with open("requirements.txt", "r", encoding="utf-8") as fh:
-    requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+    requirements = [
+        line.strip() for line in fh if line.strip() and not line.startswith("#")
+    ]
 
 setup(
     name="micro-gen",
@@ -25,7 +27,7 @@ setup(
     description="基于整洁架构的事件驱动微服务代码生成器",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ray/micro-gen",
+    url="https://github.com/DotNetAge/micro-gen",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -73,8 +75,8 @@ setup(
     },
     keywords="microservice, clean-architecture, code-generator, event-driven, ddd",
     project_urls={
-        "Bug Reports": "https://github.com/ray/micro-gen/issues",
-        "Source": "https://github.com/ray/micro-gen",
+        "Bug Reports": "https://github.com/DotNetAge/micro-gen/issues",
+        "Source": "https://github.com/DotNetAge/micro-gen",
         "Documentation": "https://micro-gen.readthedocs.io/",
     },
 )

@@ -3,18 +3,20 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "micro-gen"
+name = "micro-clean-gen"
 dynamic = ["version"]
 description = "基于整洁架构的事件驱动微服务代码生成器"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "Ray", email = "ray@rayainfo.cn"},
+license = { text = "MIT" }
+authors = [{ name = "Ray", email = "ray@rayainfo.cn" }]
+maintainers = [{ name = "Ray", email = "ray@rayainfo.cn" }]
+keywords = [
+    "microservice",
+    "clean-architecture",
+    "code-generator",
+    "event-driven",
+    "ddd",
 ]
-maintainers = [
-    {name = "Ray", email = "ray@rayainfo.cn"},
-]
-keywords = ["microservice", "clean-architecture", "code-generator", "event-driven", "ddd"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -54,10 +56,10 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ray/micro-gen"
+Homepage = "https://github.com/DotNetAge/micro-gen"
 Documentation = "https://micro-gen.readthedocs.io/"
-Repository = "https://github.com/ray/micro-gen"
-"Bug Tracker" = "https://github.com/ray/micro-gen/issues"
+Repository = "https://github.com/DotNetAge/micro-gen"
+"Bug Tracker" = "https://github.com/DotNetAge/micro-gen/issues"
 
 [project.scripts]
 micro-gen = "micro_gen.cli:main"
@@ -75,7 +77,7 @@ micro_gen = [
 ]
 
 [tool.setuptools.dynamic]
-version = {file = "VERSION"}
+version = { file = "VERSION" }
 
 [tool.setuptools_scm]
 write_to = "micro_gen/_version.py"
