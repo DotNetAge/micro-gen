@@ -20,7 +20,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
     ]
 
 setup(
-    name="micro-gen",
+    name="micro-clean-gen",
     version=version,
     author="Ray",
     author_email="ray@rayainfo.cn",
@@ -69,6 +69,8 @@ setup(
         "micro_gen": [
             "templates/*.tmpl",
             "templates/**/*.tmpl",
+            "core/templates/*.tmpl",
+            "core/templates/**/*.tmpl",
             "examples/*.yaml",
             "examples/*.yml",
         ],

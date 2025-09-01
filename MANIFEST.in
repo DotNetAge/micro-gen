@@ -6,6 +6,7 @@ include requirements.txt
 
 # 包含所有模板文件
 recursive-include micro_gen/templates *.tmpl
+recursive-include micro_gen/core/templates *.tmpl
 recursive-include micro_gen/examples *.yaml *.yml
 
 # 包含配置文件

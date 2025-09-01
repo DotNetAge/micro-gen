@@ -72,6 +72,8 @@ include-package-data = true
 micro_gen = [
     "templates/*.tmpl",
     "templates/**/*.tmpl",
+    "core/templates/*.tmpl",
+    "core/templates/**/*.tmpl",
     "examples/*.yaml",
     "examples/*.yml",
 ]
