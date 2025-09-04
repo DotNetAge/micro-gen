@@ -60,9 +60,7 @@ setup(
         ],
     },
     entry_points={
-        "console_scripts": [
-            "micro-gen=micro_gen.cli:main",
-        ],
+        "console_scripts": ["micro-gen=micro_gen.cli:main"],
     },
     include_package_data=True,
     package_data={

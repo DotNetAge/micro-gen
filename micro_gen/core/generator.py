@@ -81,9 +81,36 @@ class CleanArchitectureGenerator:
         self.config_generator.generate()
         self.generate_readme()
         
+        # 清理空目录
+        self.cleanup_empty_dirs()
+        
         print(f"✅ 项目生成完成！路径: {self.base_path}")
         print(f"🌐 支持HTTP RESTful API和gRPC双协议")
         print(f"⚡ gRPC端口: 50051, HTTP端口: 8080")
+    
+    def cleanup_empty_dirs(self):
+        """清理空目录"""
+        print("🧹 清理空目录...")
+        removed_count = 0
+        
+        # 从深层目录开始，向上遍历
+        for root, dirs, files in os.walk(self.base_path, topdown=False):
+            for dir_name in dirs:
+                dir_path = Path(root) / dir_name
+                try:
+                    # 检查目录是否为空
+                    if not any(dir_path.iterdir()):
+                        dir_path.rmdir()
+                        removed_count += 1
+                        print(f"   删除空目录: {dir_path.relative_to(self.base_path)}")
+                except (OSError, PermissionError):
+                    # 忽略无法删除的目录
+                    continue
+        
+        if removed_count > 0:
+            print(f"   ✅ 已删除 {removed_count} 个空目录")
+        else:
+            print("   ✅ 没有发现空目录")
         
     def create_project_structure(self):
         """创建整洁架构项目结构"""

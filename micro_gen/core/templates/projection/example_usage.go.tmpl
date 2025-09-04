@@ -1,0 +1,288 @@
+package projection
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"{{project_path}}/internal/entity"
+)
+
+// UserProjection 用户投影示例
+type UserProjection struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Version   int64     `json:"version"`
+}
+
+// GetID 返回投影ID
+func (u *UserProjection) GetID() string {
+	return u.ID
+}
+
+// GetAggregateID 返回聚合根ID
+func (u *UserProjection) GetAggregateID() string {
+	return u.ID
+}
+
+// GetProjectionType 返回投影类型
+func (u *UserProjection) GetProjectionType() string {
+	return "user"
+}
+
+// GetVersion 返回版本号
+func (u *UserProjection) GetVersion() int64 {
+	return u.Version
+}
+
+// SetVersion 设置版本号
+func (u *UserProjection) SetVersion(version int64) {
+	u.Version = version
+}
+
+// GetData 返回投影数据
+func (u *UserProjection) GetData() map[string]interface{} {
+	return map[string]interface{}{
+		"id":         u.ID,
+		"name":       u.Name,
+		"email":      u.Email,
+		"status":     u.Status,
+		"created_at": u.CreatedAt,
+		"updated_at": u.UpdatedAt,
+		"version":    u.Version,
+	}
+}
+
+// SetData 设置投影数据
+func (u *UserProjection) SetData(data map[string]interface{}) {
+	if v, ok := data["id"].(string); ok {
+		u.ID = v
+	}
+	if v, ok := data["name"].(string); ok {
+		u.Name = v
+	}
+	if v, ok := data["email"].(string); ok {
+		u.Email = v
+	}
+	if v, ok := data["status"].(string); ok {
+		u.Status = v
+	}
+	if v, ok := data["created_at"].(time.Time); ok {
+		u.CreatedAt = v
+	}
+	if v, ok := data["updated_at"].(time.Time); ok {
+		u.UpdatedAt = v
+	}
+	if v, ok := data["version"].(int64); ok {
+		u.Version = v
+	}
+}
+
+// GetCreatedAt 返回创建时间
+func (u *UserProjection) GetCreatedAt() time.Time {
+	return u.CreatedAt
+}
+
+// GetUpdatedAt 返回更新时间
+func (u *UserProjection) GetUpdatedAt() time.Time {
+	return u.UpdatedAt
+}
+
+// UserEventHandler 用户事件处理器
+type UserEventHandler struct {
+	store Store
+}
+
+// NewUserEventHandler 创建用户事件处理器
+func NewUserEventHandler(store Store) *UserEventHandler {
+	return &UserEventHandler{
+		store: store,
+	}
+}
+
+// Handle 处理领域事件
+func (h *UserEventHandler) Handle(ctx context.Context, event entity.Event) error {
+	switch event.GetEventType() {
+	case "UserCreated":
+		return h.handleUserCreated(ctx, event)
+	case "UserUpdated":
+		return h.handleUserUpdated(ctx, event)
+	case "UserDeleted":
+		return h.handleUserDeleted(ctx, event)
+	default:
+		return nil // 忽略不相关的事件
+	}
+}
+
+// CanHandle 判断是否可处理该事件类型
+func (h *UserEventHandler) CanHandle(eventType string) bool {
+	return eventType == "UserCreated" || eventType == "UserUpdated" || eventType == "UserDeleted"
+}
+
+// GetProjectionType 返回处理的投影类型
+func (h *UserEventHandler) GetProjectionType() string {
+	return "user"
+}
+
+func (h *UserEventHandler) handleUserCreated(ctx context.Context, event entity.Event) error {
+	data := event.GetData()
+	
+	projection := &UserProjection{
+		ID:        event.GetAggregateID(),
+		Name:      getString(data, "name"),
+		Email:     getString(data, "email"),
+		Status:    "active",
+		CreatedAt: event.GetTimestamp(),
+		UpdatedAt: event.GetTimestamp(),
+		Version:   event.GetVersion(),
+	}
+	
+	return h.store.Save(ctx, projection)
+}
+
+func (h *UserEventHandler) handleUserUpdated(ctx context.Context, event entity.Event) error {
+	data := event.GetData()
+	
+	// 获取现有投影
+	projection, err := h.store.GetByID(ctx, event.GetAggregateID(), "user")
+	if err != nil {
+		return err
+	}
+	
+	userProjection := projection.(*UserProjection)
+	
+	// 更新字段
+	if name, ok := data["name"].(string); ok {
+		userProjection.Name = name
+	}
+	if email, ok := data["email"].(string); ok {
+		userProjection.Email = email
+	}
+	if status, ok := data["status"].(string); ok {
+		userProjection.Status = status
+	}
+	
+	userProjection.UpdatedAt = event.GetTimestamp()
+	userProjection.Version = event.GetVersion()
+	
+	return h.store.Save(ctx, userProjection)
+}
+
+func (h *UserEventHandler) handleUserDeleted(ctx context.Context, event entity.Event) error {
+	return h.store.Delete(ctx, event.GetAggregateID(), "user")
+}
+
+// ExampleUsage 使用示例
+func ExampleUsage() {
+	// 创建内存存储
+	store := NewMemoryStore()
+	
+	// 创建事件处理器
+	handler := NewUserEventHandler(store)
+	
+	// 创建上下文
+	ctx := context.Background()
+	
+	// 示例：处理用户创建事件
+	userCreatedEvent := &entity.DomainEvent{
+		ID:            "event-1",
+		AggregateID:   "user-123",
+		AggregateType: "User",
+		EventType:     "UserCreated",
+		Data: map[string]interface{}{
+			"name":  "张三",
+			"email": "zhangsan@example.com",
+		},
+		Timestamp: time.Now(),
+		Version:   1,
+	}
+	
+	if err := handler.Handle(ctx, userCreatedEvent); err != nil {
+		log.Printf("处理用户创建事件失败: %v", err)
+	}
+	
+	// 查询用户投影
+	projection, err := store.GetByID(ctx, "user-123", "user")
+	if err != nil {
+		log.Printf("获取用户投影失败: %v", err)
+		return
+	}
+	
+	user := projection.(*UserProjection)
+	fmt.Printf("用户投影: %+v\n", user)
+	
+	// 示例：处理用户更新事件
+	userUpdatedEvent := &entity.DomainEvent{
+		ID:            "event-2",
+		AggregateID:   "user-123",
+		AggregateType: "User",
+		EventType:     "UserUpdated",
+		Data: map[string]interface{}{
+			"name":  "李四",
+			"email": "lisi@example.com",
+		},
+		Timestamp: time.Now(),
+		Version:   2,
+	}
+	
+	if err := handler.Handle(ctx, userUpdatedEvent); err != nil {
+		log.Printf("处理用户更新事件失败: %v", err)
+	}
+	
+	// 查询更新后的用户投影
+	updatedProjection, err := store.GetByID(ctx, "user-123", "user")
+	if err != nil {
+		log.Printf("获取更新后的用户投影失败: %v", err)
+		return
+	}
+	
+	updatedUser := updatedProjection.(*UserProjection)
+	fmt.Printf("更新后的用户投影: %+v\n", updatedUser)
+	
+	// 示例：查询所有用户
+	query := &Query{
+		ProjectionType: "user",
+		Filters: map[string]interface{}{
+			"status": "active",
+		},
+		SortBy:    "created_at",
+		SortOrder: "DESC",
+		Limit:     10,
+	}
+	
+	users, err := store.Query(ctx, query)
+	if err != nil {
+		log.Printf("查询用户失败: %v", err)
+		return
+	}
+	
+	fmt.Printf("查询到 %d 个用户\n", len(users))
+	for _, user := range users {
+		fmt.Printf("用户: %+v\n", user)
+	}
+}
+
+// getString 安全获取字符串值
+func getString(data map[string]interface{}, key string) string {
+	if val, ok := data[key]; ok {
+		if str, ok := val.(string); ok {
+			return str
+		}
+	}
+	return ""
+}
+
+// getTime 安全获取时间值
+func getTime(data map[string]interface{}, key string) time.Time {
+	if val, ok := data[key]; ok {
+		if t, ok := val.(time.Time); ok {
+			return t
+		}
+	}
+	return time.Now()
+}

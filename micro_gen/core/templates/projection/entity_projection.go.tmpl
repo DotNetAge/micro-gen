@@ -1,0 +1,45 @@
+package entity
+
+import (
+	"context"
+	"time"
+)
+
+// Projection 投影接口
+type Projection interface {
+	// GetID 返回投影的唯一标识
+	GetID() string
+	
+	// GetAggregateID 返回关联的聚合根ID
+	GetAggregateID() string
+	
+	// GetVersion 返回投影版本号
+	GetVersion() int64
+	
+	// SetVersion 设置投影版本号
+	SetVersion(version int64)
+	
+	// GetData 返回投影数据
+	GetData() map[string]interface{}
+	
+	// SetData 设置投影数据
+	SetData(data map[string]interface{})
+	
+	// GetCreatedAt 返回创建时间
+	GetCreatedAt() time.Time
+	
+	// GetUpdatedAt 返回更新时间
+	GetUpdatedAt() time.Time
+}
+
+// ProjectionHandler 投影处理器接口
+type ProjectionHandler interface {
+	// Handle 处理领域事件并更新投影
+	Handle(ctx context.Context, event Event) error
+	
+	// CanHandle 判断是否可处理该事件类型
+	CanHandle(eventType string) bool
+	
+	// GetProjectionType 返回处理的投影类型
+	GetProjectionType() string
+}

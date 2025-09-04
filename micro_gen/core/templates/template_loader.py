@@ -48,7 +48,20 @@ class TemplateLoader:
         """
         template_content = self.load_template(template_path)
         
-        # 简单的模板渲染 - 替换占位符
+        # 支持Go模板语法 ({{ .VariableName }})
+        import re
+        
+        # 处理Go模板语法
+        def replace_go_template(match):
+            var_name = match.group(1).strip()
+            if var_name.startswith('.'):
+                var_name = var_name[1:]  # 移除点号
+            return str(context.get(var_name, match.group(0)))
+        
+        # 替换Go模板语法
+        template_content = re.sub(r'\{\{\s*(\.\w+)\s*\}\}', replace_go_template, template_content)
+        
+        # 同时支持旧的简单占位符语法
         for key, value in context.items():
             placeholder = f"{{{{{key}}}}}"
             template_content = template_content.replace(placeholder, str(value))
