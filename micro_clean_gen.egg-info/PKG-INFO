@@ -1,3 +1,53 @@
+Metadata-Version: 2.4
+Name: micro-clean-gen
+Version: 1.0.3
+Summary: 基于整洁架构的事件驱动微服务代码生成器
+Home-page: https://github.com/DotNetAge/micro-gen
+Author: Ray
+Author-email: Ray <ray@rayainfo.cn>
+Maintainer-email: Ray <ray@rayainfo.cn>
+License: MIT
+Project-URL: Homepage, https://github.com/DotNetAge/micro-gen
+Project-URL: Documentation, https://micro-gen.readthedocs.io/
+Project-URL: Repository, https://github.com/DotNetAge/micro-gen
+Project-URL: Bug Tracker, https://github.com/DotNetAge/micro-gen/issues
+Keywords: microservice,clean-architecture,code-generator,event-driven,ddd
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Code Generators
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: jinja2>=3.1.0
+Requires-Dist: click>=8.0.0
+Requires-Dist: colorama>=0.4.4
+Requires-Dist: jsonschema>=4.0.0
+Requires-Dist: loguru>=0.7.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: black>=22.0.0; extra == "dev"
+Requires-Dist: flake8>=5.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Requires-Dist: pre-commit>=2.20.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: sphinx>=5.0.0; extra == "docs"
+Requires-Dist: sphinx-rtd-theme>=1.0.0; extra == "docs"
+Requires-Dist: sphinx-autodoc-typehints>=1.19.0; extra == "docs"
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
 # 🚀 Micro-Gen - 下一代Go微服务代码生成器
 
 > **⚡ 15秒生成企业级Go微服务** - 支持整洁架构、CQRS、事件溯源、DDD、投影系统

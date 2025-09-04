@@ -66,7 +66,7 @@ nats-down:
 
 # 查看NATS服务器状态
 nats-status:
-	@docker ps --filter name=nats-server --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+	@docker ps --filter name=nats-server --format "table {{ '{{' }}.Names{{ '}}' }}	{{ '{{' }}.Status{{ '}}' }}	{{ '{{' }}.Ports{{ '}}' }}"
 
 # 初始化事件系统
 init-events:

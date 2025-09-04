@@ -14,6 +14,10 @@ keywords = [
     "microservice",
     "clean-architecture",
     "code-generator",
+    "event-sourcing",
+    "cqrs",
+    "saga",
+    "curd",
     "event-driven",
     "ddd",
 ]
