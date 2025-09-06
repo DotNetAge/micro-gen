@@ -5,13 +5,14 @@
 ## 📋 目录
 
 1. [快速开始](#快速开始)
-2. [聚合根配置](#聚合根配置)
-3. [命令定义](#命令定义)
-4. [事件定义](#事件定义)
-5. [读模型配置](#读模型配置)
-6. [完整示例](#完整示例)
-7. [最佳实践](#最佳实践)
-8. [常见问题](#常见问题)
+2. [值对象定义](#值对象定义)
+3. [聚合根配置](#聚合根配置)
+4. [命令定义](#命令定义)
+5. [事件定义](#事件定义)
+6. [读模型配置](#读模型配置)
+7. [完整示例](#完整示例)
+8. [最佳实践](#最佳实践)
+9. [常见问题](#常见问题)
 
 ---
 
@@ -20,6 +21,35 @@
 ```yaml
 # cqrs-config.yaml
 module: ecommerce
+
+# 值对象定义
+value_objects:
+  - name: OrderItem
+    fields:
+      - name: productId
+        type: string
+        required: true
+      - name: productName
+        type: string
+        required: true
+      - name: quantity
+        type: int
+        required: true
+      - name: price
+        type: float64
+        required: true
+  
+  - name: Address
+    fields:
+      - name: street
+        type: string
+        required: true
+      - name: city
+        type: string
+        required: true
+      - name: zipCode
+        type: string
+        required: true
 
 aggregates:
   - name: Order
@@ -31,6 +61,8 @@ aggregates:
         type: string
       - name: items
         type: "[]OrderItem"
+      - name: shippingAddress
+        type: Address
       - name: status
         type: string
     
@@ -43,6 +75,9 @@ aggregates:
             required: true
           - name: items
             type: "[]OrderItem"
+            required: true
+          - name: shippingAddress
+            type: Address
             required: true
       
       - name: ConfirmOrder
@@ -61,6 +96,8 @@ aggregates:
             type: string
           - name: items
             type: "[]OrderItem"
+          - name: shippingAddress
+            type: Address
           - name: createdAt
             type: time.Time
       
@@ -89,11 +126,140 @@ aggregates:
 
 ---
 
+## 💎 值对象定义
+
+值对象（Value Object）是DDD中的重要概念，用于表示没有身份标识的领域概念，如地址、金额等。
+
+### 基本结构
+
+```yaml
+value_objects:
+  - name: [值对象名称]
+    description: [描述]           # 可选
+    fields:
+      - name: [字段名]
+        type: [类型]
+        required: [true/false]   # 默认为false
+        validation: [规则]       # 可选验证规则
+```
+
+### 值对象特点
+
+- **不可变性**：值对象一旦创建，属性不可更改
+- **相等性**：基于属性值而非身份标识
+- **无副作用**：方法不会改变对象状态
+- **可组合**：值对象可以嵌套其他值对象
+
+### 示例
+
+```yaml
+value_objects:
+  - name: Email
+    description: "邮箱地址"
+    fields:
+      - name: value
+        type: string
+        required: true
+        validation: email
+  
+  - name: Money
+    description: "货币金额"
+    fields:
+      - name: amount
+        type: float64
+        required: true
+        validation: "min:0"
+      - name: currency
+        type: string
+        required: true
+        validation: "in:USD,EUR,CNY"
+  
+  - name: Address
+    description: "邮寄地址"
+    fields:
+      - name: street
+        type: string
+        required: true
+      - name: city
+        type: string
+        required: true
+      - name: zipCode
+        type: string
+        required: true
+        validation: "regex:^\\d{5}$"
+      - name: country
+        type: string
+        required: true
+```
+
+### 使用场景
+
+| 场景 | 示例 |
+|------|------|
+| **标识符** | 用户ID、订单号 |
+| **度量** | 金额、重量、长度 |
+| **描述** | 地址、颜色、尺寸 |
+| **时间段** | 日期范围、时间间隔 |
+
+### 嵌套值对象
+
+值对象可以嵌套使用，形成复杂的领域概念：
+
+```yaml
+value_objects:
+  - name: GeoLocation
+    fields:
+      - name: latitude
+        type: float64
+        required: true
+      - name: longitude
+        type: float64
+        required: true
+  
+  - name: FullAddress
+    fields:
+      - name: street
+        type: string
+        required: true
+      - name: city
+        type: string
+        required: true
+      - name: location
+        type: GeoLocation
+        required: false
+```
+
+---
+
 ## 🏛️ 聚合根配置
 
 ### 基础结构
 
 ```yaml
+# 值对象定义（可复用的数据结构）
+value_objects:
+  - name: Address
+    fields:
+      - name: street
+        type: string
+        required: true
+      - name: city
+        type: string
+        required: true
+      - name: zipCode
+        type: string
+        required: true
+  
+  - name: Money
+    fields:
+      - name: amount
+        type: float64
+        required: true
+      - name: currency
+        type: string
+        required: true
+
+# 聚合根定义
 aggregates:
   - name: [聚合名称]
     projection: [true/false]    # 是否启用读模型
@@ -101,7 +267,7 @@ aggregates:
     # 聚合状态字段（写模型）
     fields:
       - name: [字段名]
-        type: [类型]
+        type: [类型]              # 可以是值对象名称
         required: [true/false]   # 可选
     
     # 命令定义
@@ -306,6 +472,47 @@ module: ecommerce
 
 description: "电商订单系统CQRS配置"
 
+# 值对象定义
+value_objects:
+  - name: Address
+    fields:
+      - name: street
+        type: string
+        required: true
+      - name: city
+        type: string
+        required: true
+      - name: zipCode
+        type: string
+        required: true
+      - name: country
+        type: string
+        required: true
+  
+  - name: Money
+    fields:
+      - name: amount
+        type: float64
+        required: true
+      - name: currency
+        type: string
+        required: true
+  
+  - name: OrderItem
+    fields:
+      - name: productId
+        type: string
+        required: true
+      - name: productName
+        type: string
+        required: true
+      - name: quantity
+        type: int
+        required: true
+      - name: price
+        type: Money
+        required: true
+
 aggregates:
   - name: Order
     projection: true
@@ -323,7 +530,7 @@ aggregates:
       - name: status
         type: string
       - name: totalAmount
-        type: float64
+        type: Money
     
     # 命令
     commands:

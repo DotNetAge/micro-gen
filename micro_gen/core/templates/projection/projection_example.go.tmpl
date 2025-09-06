@@ -5,41 +5,34 @@ import (
 	"fmt"
 	"log"
 
-	"{{.ModuleName}}/adapter/persistence"
-	"{{.ModuleName}}/internal/entity/projection"
-	"{{.ModuleName}}/internal/usecase/projection"
+	"{{ project_name }}/adapter/persistence"
+	"{{ project_name }}/internal/usecase/projection"
 )
 
-// 整洁架构使用示例
+// {{ aggregate_name }}投影系统使用示例
 func main() {
 	// 1. 创建基础设施（适配器层）
-	repo := persistence.NewMemoryReadModelRepository()
+	repo := persistence.NewMemory{{ aggregate_name }}Repository()
 	
 	// 2. 创建用例层服务
-	userService := projection.NewUserProjectionService(repo)
-	orderService := projection.NewOrderProjectionService(repo)
+	service := projection.New{{ aggregate_name }}ProjectionService(repo)
 	
 	// 3. 创建事件处理器（适配器层）
-	userProcessor := projection.NewUserProjectionProcessor(userService)
-	orderProcessor := projection.NewOrderProjectionProcessor(orderService)
+	processor := projection.New{{ aggregate_name }}ProjectionProcessor(service)
 	
-	// 4. 注册到事件总线（实际项目中）
-	fmt.Println("整洁架构投影系统已初始化")
+	// 4. 注册到事件总线
+	fmt.Println("{{ aggregate_name }}投影系统已初始化")
 	fmt.Println("请将处理器注册到事件总线：")
-	fmt.Println("eventBus.Subscribe(userProcessor)")
-	fmt.Println("eventBus.Subscribe(orderProcessor)")
+	fmt.Printf("eventBus.Subscribe(%s)\n", processor)
 	
 	// 5. 使用示例
 	ctx := context.Background()
 	
 	// 查询示例
-	users, err := userService.QueryUsers(ctx, projection.Query{
-		ModelType: "user",
-		Limit:     10,
-	})
+	models, err := service.GetAll{{ aggregate_name }}s(ctx)
 	if err != nil {
 		log.Printf("查询失败: %v", err)
 	} else {
-		fmt.Printf("找到 %d 个用户读模型\n", len(users))
+		fmt.Printf("找到 %d 个{{ aggregate_name }}读模型\n", len(models))
 	}
 }

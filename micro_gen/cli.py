@@ -63,6 +63,15 @@ def session(path):
 
 @cli.command()
 @click.option('--path', default='.', help='项目路径')
+def task(path):
+    """为现有项目添加任务系统 - 极简设计，一行代码即可使用"""
+    from micro_gen.core.simple_enhancer import SimpleEnhancer
+    enhancer = SimpleEnhancer(Path(path))
+    enhancer.add_simple_task()
+
+
+@cli.command()
+@click.option('--path', default='.', help='项目路径')
 def saga(path):
     """为现有项目添加Saga事务 - 极简设计，一行代码即可使用"""
     from micro_gen.core.simple_enhancer import SimpleEnhancer
@@ -151,13 +160,14 @@ def deploy(path, name, env):
 def magic(path, name, config, force):
     """🪄 魔法初始化 - 一键完成所有功能集成！
     
-    自动执行：init → es → session → task → saga → projection
-    创建完整的微服务，包含事件溯源、会话、任务、事务和投影机制
+    使用配置文件驱动生成完整的微服务，包含事件溯源、会话、任务、事务和投影机制
+    
+    支持值对象、聚合投影、CQRS读模型等高级功能
     
     示例:
-        micro-gen magic --name my-service
-        micro-gen magic --path ./my-project --name awesome-service
-        micro-gen magic --config ./my-config.yaml --name full-stack-service
+        micro-gen magic --name my-service                    # 使用默认配置
+        micro-gen magic --path ./my-project --name awesome-service  # 指定路径
+        micro-gen magic --config ./magic-config.yaml --name full-stack-service  # 使用配置
     """
     from micro_gen.core.magic_enhancer import MagicEnhancer
     
@@ -398,110 +408,128 @@ class ModuleEnhancer:
 
 
 @cli.command()
-def projection():
-    """为现有项目添加投影机制 - 支持事件溯源读模型"""
-    enhancer = ProjectEnhancer(Path.cwd())
-    enhancer.add_projection_mechanism()
-
-
-@cli.command()
-@click.option("--force", is_flag=True, help="强制覆盖现有文件")
-def es(force: bool):
-    """为现有项目添加ES事件机制 - 基于NATS JetStream"""
-    enhancer = ProjectEnhancer(Path.cwd())
-    enhancer.add_es_event_system()
-
-
-@cli.command()
-@click.option('--path', default='.', help='项目路径')
-def session(path):
-    """为现有项目添加会话管理能力 - 极简设计，一行代码即可使用"""
-    from micro_gen.core.simple_enhancer import SimpleEnhancer
-    enhancer = SimpleEnhancer(Path(path))
-    enhancer.add_simple_session()
-
-
-@cli.command()
-@click.option('--path', default='.', help='项目路径')
-def task(path):
-    """为现有项目添加任务系统 - 极简设计，一行代码即可使用"""
-    from micro_gen.core.simple_enhancer import SimpleEnhancer
-    enhancer = SimpleEnhancer(Path(path))
-    enhancer.add_simple_task()
-
-
-@cli.command()
-@click.option('--path', default='.', help='项目路径')
-def saga(path):
-    """为现有项目添加Saga事务 - 极简设计，一行代码即可使用"""
-    from micro_gen.core.simple_enhancer import SimpleEnhancer
-    enhancer = SimpleEnhancer(Path(path))
-    enhancer.add_simple_saga()
-
-
-class ModuleEnhancer:
-    """模块增强器 - 处理具体模块的添加"""
+@click.option('--config', '-c', required=True, help='配置文件路径')
+@click.option('--module', '-m', help='模块名称（可选，默认从配置文件推断）')
+def projection(config: str, module: str):
+    """基于配置文件生成投影机制 - 支持值对象和事件溯源读模型"""
+    config_path = Path(config)
+    if not config_path.exists():
+        logger.error(f"❌ 配置文件不存在: {config_path}")
+        return
     
-    def __init__(self, project_path: Path, project_name: str, module_type: str):
+    try:
+        import yaml
+        with open(config_path) as f:
+            config_data = yaml.safe_load(f)
+    except Exception as e:
+        logger.error(f"❌ 配置文件解析失败: {e}")
+        return
+    
+    # 推断模块名
+    if not module:
+        module = config_data.get('module', Path.cwd().name)
+    
+    logger.info(f"🚀 基于配置文件生成投影机制: {config_path}")
+    
+    try:
+        from micro_gen.core.templates.template_loader import TemplateLoader
+        
+        generator = ProjectionGenerator(Path.cwd(), module)
+        generator.generate_from_config(config_data)
+        
+        logger.success("✅ 投影机制生成完成！")
+    except ImportError as e:
+        logger.error(f"❌ 导入失败: {e}")
+        logger.info("💡 请确保已安装PyYAML: pip install pyyaml")
+
+
+class ProjectionGenerator:
+    """投影生成器 - 基于配置文件生成投影代码"""
+    
+    def __init__(self, project_path: Path, module_name: str):
         self.project_path = project_path
-        self.project_name = project_name
-        self.module_type = module_type
+        self.module_name = module_name
         self.template_loader = TemplateLoader(
-            Path(__file__).parent / "core" / "templates" / module_type
+            Path(__file__).parent / "core" / "templates" / "projection"
         )
     
-    def add_module(self, directories: list, files: list):
-        """添加模块"""
-        # 创建目录
+    def generate_from_config(self, config_data):
+        """从配置文件生成投影代码"""
+        # 创建必要的目录
+        directories = [
+            "internal/entity",
+            "internal/usecase/projection",
+            "pkg/projection"
+        ]
+        
         for directory in directories:
             (self.project_path / directory).mkdir(parents=True, exist_ok=True)
         
-        # 生成文件
-        context = {"project_name": self.project_name}
-        for file_path, template_name in files:
-            content = self.template_loader.render_template(template_name, context)
-            (self.project_path / file_path).write_text(content)
+        # 处理值对象
+        value_objects = config_data.get('value_objects', [])
+        for vo in value_objects:
+            self._generate_value_object(vo)
+        
+        # 处理聚合投影
+        aggregates = config_data.get('aggregates', [])
+        for aggregate in aggregates:
+            self._generate_projection_for_aggregate(aggregate, value_objects)
     
-    def update_config(self, config_fields: dict):
-        """更新配置文件"""
-        config_file = self.project_path / "pkg" / "config" / "config.go"
-        if not config_file.exists():
-            logger.warning("⚠️  配置文件不存在，跳过配置更新")
-            return
+    def _generate_value_object(self, value_object):
+        """生成值对象代码"""
+        vo_name = value_object['name']
+        fields = value_object.get('fields', [])
         
-        content = config_file.read_text()
+        context = {
+            'name': vo_name,
+            'fields': fields,
+            'project_name': self.module_name
+        }
         
-        # 添加结构体字段
-        struct_end = "\tLogLevel string\n}"
-        if struct_end in content:
-            new_fields = "\tLogLevel string\n\n\t// " + self.module_type.upper() + "配置\n"
-            for field, default in config_fields.items():
-                new_fields += f"\t{field} string\n"
-            content = content.replace(struct_end, new_fields + "}")
+        content = self.template_loader.render_template('value_object.go.tmpl', context)
+        output_path = self.project_path / "internal" / "entity" / f"{vo_name.lower()}.go"
+        output_path.write_text(content)
+        logger.success(f"✅ 生成值对象: {vo_name}")
+    
+    def _generate_projection_for_aggregate(self, aggregate, value_objects):
+        """为聚合生成投影代码"""
+        aggregate_name = aggregate['name']
+        read_model = aggregate.get('readModel', {})
+        fields = read_model.get('fields', [])
         
-        # 添加Load函数默认值
-        load_end = "\t\tLogLevel:   getEnv(\"LOG_LEVEL\", \"info\"),\n\t}\n\n\treturn config, nil\n}"
-        if load_end in content:
-            new_load = "\t\tLogLevel:   getEnv(\"LOG_LEVEL\", \"info\"),\n"
-            for field, default in config_fields.items():
-                new_load += f"\t\t{field}: {default},\n"
-            new_load += "\t}\n\n\treturn config, nil\n}"
-            content = content.replace(load_end, new_load)
+        # 收集值对象类型用于导入
+        value_object_types = []
+        for field in fields:
+            field_type = field.get('type', '')
+            for vo in value_objects:
+                if field_type == vo['name']:
+                    value_object_types.append(field_type)
         
-        config_file.write_text(content)
-        logger.success(f"✅ {self.module_type}配置已添加到 pkg/config/config.go")
-
-
-@cli.command()
-def projection():
-    """为现有项目添加投影机制 - 支持事件溯源读模型"""
-    enhancer = ProjectEnhancer(Path.cwd())
-    enhancer.add_projection_mechanism()
-
-
-
-
-
+        context = {
+            'aggregate_name': aggregate_name,
+            'read_model_name': read_model.get('name', f"{aggregate_name}ReadModel"),
+            'fields': fields,
+            'value_objects': value_objects,
+            'project_name': self.module_name,
+            'value_object_types': value_object_types
+        }
+        
+        # 生成实体
+        entity_content = self.template_loader.render_template('aggregate_read_model.go.tmpl', context)
+        entity_path = self.project_path / "internal" / "entity" / f"{aggregate_name.lower()}_read_model.go"
+        entity_path.write_text(entity_content)
+        
+        # 生成存储库
+        repo_content = self.template_loader.render_template('memory_repository.go.tmpl', context)
+        repo_path = self.project_path / "pkg" / "projection" / f"{aggregate_name.lower()}_repository.go"
+        repo_path.write_text(repo_content)
+        
+        # 生成查询服务
+        service_content = self.template_loader.render_template('projection_service.go.tmpl', context)
+        service_path = self.project_path / "internal" / "usecase" / "projection" / f"{aggregate_name.lower()}_service.go"
+        service_path.write_text(service_content)
+        
+        logger.success(f"✅ 生成投影: {aggregate_name}")
 
 
 if __name__ == "__main__":

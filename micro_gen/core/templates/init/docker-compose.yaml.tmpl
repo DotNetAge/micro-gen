@@ -17,42 +17,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      - redis
-      - postgres
-    networks:
-      - {{project_name}}-network
-
-  redis:
-    image: redis:7-alpine
-    container_name: {{project_name}}-redis
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        path: "/var/log/docker/{{project_name}}.log"  # 宿主机日志路径
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - {{project_name}}-network
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: {{project_name}}-postgres
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    environment:
-      - POSTGRES_DB=${DB_NAME:-{{project_name}}}
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - {{project_name}}-network
-
-volumes:
-  redis_data:
-  postgres_data:
-
-networks:
-  {{project_name}}-network:
-    driver: bridge
+      - /var/log/docker:/var/log/docker  # 挂载宿主机目录存储日志

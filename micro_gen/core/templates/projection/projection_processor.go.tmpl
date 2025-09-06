@@ -3,32 +3,32 @@ package projection
 import (
 	"context"
 
-	"{{.ModuleName}}/internal/entity"
-	"{{.ModuleName}}/internal/usecase/projection"
+	"{{ project_name }}/internal/entity"
+	"{{ project_name }}/internal/usecase/projection"
 )
 
-// {{.AggregateName}}ProjectionProcessor {{.AggregateName}}投影事件处理器（适配器层）
-type {{.AggregateName}}ProjectionProcessor struct {
-	service *projection.{{.AggregateName}}ProjectionService
+// {{ aggregate_name }}ProjectionProcessor {{ aggregate_name }}投影事件处理器
+type {{ aggregate_name }}ProjectionProcessor struct {
+	service *projection.{{ aggregate_name }}ProjectionService
 }
 
-// New{{.AggregateName}}ProjectionProcessor 创建投影处理器
-func New{{.AggregateName}}ProjectionProcessor(service *projection.{{.AggregateName}}ProjectionService) *{{.AggregateName}}ProjectionProcessor {
-	return &{{.AggregateName}}ProjectionProcessor{
+// New{{ aggregate_name }}ProjectionProcessor 创建投影处理器
+func New{{ aggregate_name }}ProjectionProcessor(service *projection.{{ aggregate_name }}ProjectionService) *{{ aggregate_name }}ProjectionProcessor {
+	return &{{ aggregate_name }}ProjectionProcessor{
 		service: service,
 	}
 }
 
 // SupportedEventTypes 返回支持的事件类型
-func (p *{{.AggregateName}}ProjectionProcessor) SupportedEventTypes() []string {
+func (p *{{ aggregate_name }}ProjectionProcessor) SupportedEventTypes() []string {
 	return []string{
-		"{{.AggregateName}}Created",
-		"{{.AggregateName}}Updated",
-		"{{.AggregateName}}Deleted",
+		"{{ aggregate_name }}Created",
+		"{{ aggregate_name }}Updated", 
+		"{{ aggregate_name }}Deleted",
 	}
 }
 
 // ProcessEvent 处理领域事件
-func (p *{{.AggregateName}}ProjectionProcessor) ProcessEvent(ctx context.Context, event entity.DomainEvent) error {
+func (p *{{ aggregate_name }}ProjectionProcessor) ProcessEvent(ctx context.Context, event entity.DomainEvent) error {
 	return p.service.HandleEvent(ctx, event)
 }

@@ -1,0 +1,56 @@
+// {{ name }} - Value Object
+package entity
+
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"regexp"
+)
+
+// {{ name }} represents a value object for {{ description }}
+type {{ name }} struct {
+{% for field in fields %}	{{ field.name }} {{ field.type }} `json:"{{ field.json|default(field.name) }}"`
+{% endfor %}
+}
+
+// New{{ name }} creates a new {{ name }} value object
+func New{{ name }}({% for field in fields %}{{ field.name|lower }} {{ field.type }}{% if not loop.last %}, {% endif %}{% endfor %}) {{ name }} {
+	return {{ name }} {
+{% for field in fields %}		{{ field.name }}: {{ field.name|lower }},
+{% endfor %}	}
+}
+
+// Equals checks if two {{ name }} instances are equal
+func (v {{ name }}) Equals(other {{ name }}) bool {
+{% for field in fields %}	if !reflect.DeepEqual(v.{{ field.name }}, other.{{ field.name }}) {
+		return false
+	}
+{% endfor %}	return true
+}
+
+// String returns string representation
+func (v {{ name }}) String() string {
+	data, _ := json.Marshal(v)
+	return string(data)
+}
+
+// Validate validates the value object
+func (v {{ name }}) Validate() error {
+{% for field in fields %}
+{% if field.validation %}
+{% if field.validation.min %}	if len(v.{{ field.name }}) < {{ field.validation.min }} {
+		return fmt.Errorf("{{ field.name }} must be at least {{ field.validation.min }} characters")
+	}
+{% endif %}
+{% if field.validation.max %}	if len(v.{{ field.name }}) > {{ field.validation.max }} {
+		return fmt.Errorf("{{ field.name }} must be at most {{ field.validation.max }} characters")
+	}
+{% endif %}
+{% if field.validation.regex %}	if !regexp.MustCompile("{{ field.validation.regex }}").MatchString(v.{{ field.name }}) {
+		return fmt.Errorf("{{ field.name }} format is invalid")
+	}
+{% endif %}
+{% endif %}
+{% endfor %}	return nil
+}
